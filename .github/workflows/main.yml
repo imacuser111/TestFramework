@@ -1,0 +1,53 @@
+name: Build and Upload XCFramework to Release
+
+on:
+  push:
+    tags:
+      - 'v*'   # 只有 push tag (像 v1.0.0) 時才觸發
+
+jobs:
+  build-xcframework:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Select Xcode version
+        run: sudo xcode-select -s /Applications/Xcode_16.2.app
+
+      - name: Build Device Archive
+        run: |
+          xcodebuild archive \
+            -scheme TestFramework \
+            -destination "generic/platform=iOS" \
+            -archivePath $PWD/build/ios_devices.xcarchive \
+            SKIP_INSTALL=NO \
+            BUILD_LIBRARY_FOR_DISTRIBUTION=YES
+
+      - name: Build Simulator Archive
+        run: |
+          xcodebuild archive \
+            -scheme TestFramework \
+            -destination "generic/platform=iOS Simulator" \
+            -archivePath $PWD/build/ios_simulator.xcarchive \
+            SKIP_INSTALL=NO \
+            BUILD_LIBRARY_FOR_DISTRIBUTION=YES
+
+      - name: Create XCFramework
+        run: |
+          xcodebuild -create-xcframework \
+            -framework $PWD/build/ios_devices.xcarchive/Products/Library/Frameworks/TestFramework.framework \
+            -framework $PWD/build/ios_simulator.xcarchive/Products/Library/Frameworks/TestFramework.framework \
+            -output $PWD/TestFramework.xcframework
+
+      - name: Zip XCFramework
+        run: |
+          zip -r TestFramework.xcframework.zip TestFramework.xcframework
+
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: TestFramework.xcframework.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
