@@ -7,17 +7,18 @@ on:
 
 jobs:
   build-xcframework:
-    runs-on: macos-latest
+    runs-on: macos-latest  # 使用 macOS runner（預設為最新版本）
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4  # 檢出目前儲存庫的程式碼
 
       - name: Select Xcode version
-        run: sudo xcode-select -s /Applications/Xcode_16.2.app
+        run: sudo xcode-select -s /Applications/Xcode_16.2.app  # 切換到指定版本的 Xcode（16.2）
 
       - name: Build Device Archive
         run: |
+          # 建立 iOS 實體裝置的 framework archive
           xcodebuild archive \
             -scheme TestFramework \
             -destination "generic/platform=iOS" \
@@ -27,6 +28,7 @@ jobs:
 
       - name: Build Simulator Archive
         run: |
+          # 建立 iOS 模擬器的 framework archive
           xcodebuild archive \
             -scheme TestFramework \
             -destination "generic/platform=iOS Simulator" \
@@ -36,6 +38,7 @@ jobs:
 
       - name: Create XCFramework
         run: |
+          # 將實體裝置與模擬器的 framework 組合成一個 XCFramework
           xcodebuild -create-xcframework \
             -framework $PWD/build/ios_devices.xcarchive/Products/Library/Frameworks/TestFramework.framework \
             -framework $PWD/build/ios_simulator.xcarchive/Products/Library/Frameworks/TestFramework.framework \
@@ -43,11 +46,12 @@ jobs:
 
       - name: Zip XCFramework
         run: |
+          # 將 XCFramework 壓縮為 zip 檔案
           zip -r TestFramework.xcframework.zip TestFramework.xcframework
 
       - name: Upload Release Asset
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v2  # 使用 softprops 的 action 上傳檔案至 GitHub Release
         with:
           files: TestFramework.xcframework.zip
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}  # 使用你手動建立的 Personal Access Token，儲存在 GitHub secrets 中
