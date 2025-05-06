@@ -54,4 +54,4 @@ jobs:
         with:
           files: TestFramework.xcframework.zip
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}  # 使用你手動建立的 Personal Access Token，儲存在 GitHub secrets 中
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 使用你手動建立的 Personal Access Token，儲存在 GitHub secrets 中
